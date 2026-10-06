@@ -1,6 +1,8 @@
 name = "pixytech-portal"
 main = "src/index.js"
 compatibility_date = "2026-09-01"
+workers_dev = true
+routes = [{ pattern = "portal.pixytech.com", custom_domain = true }]
 
 # The portal page itself. The worker runs first so /auth, /api and /apps are
 # handled here; everything else falls through to these files.

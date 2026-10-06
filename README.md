@@ -1,7 +1,7 @@
 # Pixytech Portal
 
 A tile launcher for Pixytech apps at
-<https://pixytech-portal.rajnish-noonia.workers.dev/>.
+<https://portal.pixytech.com/>.
 
 Anyone can open it and see the public apps. Signing in with GitHub shows the
 private apps you've been given access to. Getting access to an app never
@@ -74,10 +74,10 @@ and add people. The tile shows up within five minutes.
 ## One-time setup
 
 1. **Create a GitHub App**:
-   - Homepage URL: `https://pixytech-portal.rajnish-noonia.workers.dev/`
+   - Homepage URL: `https://portal.pixytech.com/`
    - Create it under the organization (org Settings → Developer settings →
      GitHub Apps).
-   - Callback URL: `https://pixytech-portal.rajnish-noonia.workers.dev/auth/callback`
+   - Callback URL: `https://portal.pixytech.com/auth/callback`
    - Webhook: untick Active.
    - Repository permissions: **Contents: Read-only** (Metadata: Read-only is
      added automatically).
