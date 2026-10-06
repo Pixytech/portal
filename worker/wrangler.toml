@@ -13,6 +13,7 @@ run_worker_first = true
 
 [vars]
 OWNER = "Pixytech"
+CANONICAL_HOST = "portal.pixytech.com"
 # Members of this org team can use every private app. Each app also has its
 # own team: app-<slug>, or the "teams" listed in its portal.json.
 ADMIN_TEAM = "portal-admins"

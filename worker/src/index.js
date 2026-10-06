@@ -110,6 +110,11 @@ async function privateApp(request, env, ctx, url, user) {
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
+    // One address for everyone: sessions and the GitHub callback live there.
+    if (env.CANONICAL_HOST && url.hostname !== env.CANONICAL_HOST && url.hostname.endsWith(".workers.dev")) {
+      url.hostname = env.CANONICAL_HOST;
+      return Response.redirect(url.href, 301);
+    }
     const path = url.pathname;
     const user = await unseal(env, readCookie(request, SESSION));
 
