@@ -17,8 +17,8 @@ APP_TOPIC = "portal-app"
 # own team: app-<slug>, or the "teams" listed in its portal.json.
 ADMIN_TEAM = "portal-admins"
 # From the GitHub App's settings page.
-GITHUB_APP_ID = "REPLACE_WITH_APP_ID"
-GITHUB_CLIENT_ID = "REPLACE_WITH_APP_CLIENT_ID"
+GITHUB_APP_ID = "5205394"
+GITHUB_CLIENT_ID = "Iv23libDkjhA5geQ73Ha"
 
 # Secrets, set once:
 #   npx wrangler secret put GITHUB_CLIENT_SECRET
