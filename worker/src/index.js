@@ -111,8 +111,13 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     // One address for everyone: sessions and the GitHub callback live there.
-    if (env.CANONICAL_HOST && url.hostname !== env.CANONICAL_HOST && url.hostname.endsWith(".workers.dev")) {
-      url.hostname = env.CANONICAL_HOST;
+    // Plain http would also break sign-in: GitHub only knows the https
+    // callback, and the __Host- cookies need a secure page.
+    const wrongHost = env.CANONICAL_HOST && url.hostname !== env.CANONICAL_HOST && url.hostname.endsWith(".workers.dev");
+    const local = url.hostname === "localhost" || url.hostname === "127.0.0.1";
+    if (wrongHost || (url.protocol === "http:" && !local)) {
+      if (wrongHost) url.hostname = env.CANONICAL_HOST;
+      url.protocol = "https:";
       return Response.redirect(url.href, 301);
     }
     const path = url.pathname;
