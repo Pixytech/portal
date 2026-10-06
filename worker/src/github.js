@@ -28,10 +28,13 @@ function pkcs1ToPkcs8(pkcs1) {
 
 function appKey(env) {
   signingKey ??= (() => {
-    const pem = env.GITHUB_APP_PRIVATE_KEY;
-    const der = Uint8Array.from(atob(pem.replace(/-----[^-]+-----/g, "").replace(/\s+/g, "")), (c) =>
-      c.charCodeAt(0),
-    );
+    // Tolerate keys pasted through a phone or dashboard: escaped "\n"s, and
+    // header dashes auto-corrected into en/em dashes.
+    const pem = env.GITHUB_APP_PRIVATE_KEY.replace(/\\n/g, "\n");
+    const body = pem
+      .replace(/[-–—]+\s*(BEGIN|END)[^-–—]*[-–—]+/g, "")
+      .replace(/[^A-Za-z0-9+/=]/g, "");
+    const der = Uint8Array.from(atob(body), (c) => c.charCodeAt(0));
     const pkcs8 = pem.includes("BEGIN RSA PRIVATE KEY") ? pkcs1ToPkcs8(der) : der;
     return crypto.subtle.importKey("pkcs8", pkcs8, { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" }, false, [
       "sign",
