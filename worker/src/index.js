@@ -107,50 +107,62 @@ async function privateApp(request, env, ctx, url, user) {
   return serveFile(env, ctx, app, decodeURIComponent(rest.join("/")));
 }
 
+async function handle(request, env, ctx) {
+  const url = new URL(request.url);
+  // One address for everyone: sessions and the GitHub callback live there.
+  // Plain http would also break sign-in: GitHub only knows the https
+  // callback, and the __Host- cookies need a secure page.
+  const wrongHost = env.CANONICAL_HOST && url.hostname !== env.CANONICAL_HOST && url.hostname.endsWith(".workers.dev");
+  const local = url.hostname === "localhost" || url.hostname === "127.0.0.1";
+  if (wrongHost || (url.protocol === "http:" && !local)) {
+    if (wrongHost) url.hostname = env.CANONICAL_HOST;
+    url.protocol = "https:";
+    return Response.redirect(url.href, 301);
+  }
+  const path = url.pathname;
+  const user = await unseal(env, readCookie(request, SESSION));
+
+  try {
+    if (path.startsWith("/auth/") && !appConfigured(env)) {
+      return page(503, "Not set up yet", "Sign-in isn't configured on this portal yet.");
+    }
+    if (path === "/auth/login") return await login(env, url);
+    if (path === "/auth/callback") return await callback(request, env, url);
+    if (path === "/auth/logout") {
+      if (request.method !== "POST") return new Response("Use POST", { status: 405 });
+      return json({ ok: true }, 200, { "Set-Cookie": cookie(SESSION, "", 0) });
+    }
+    if (path === "/api/session") {
+      return json({ user: user ? { login: user.login, avatar: user.avatar } : null });
+    }
+    if (path === "/api/apps") {
+      if (!appConfigured(env)) return json({ apps: [], warning: "GitHub App not configured" });
+      return json({ apps: await visibleApps(env, user?.login) });
+    }
+    if (path === "/apps" || path.startsWith("/apps/")) {
+      if (!appConfigured(env)) return page(503, "Not set up yet", "Private apps are not configured.");
+      return await privateApp(request, env, ctx, url, user);
+    }
+  } catch (e) {
+    console.error(e);
+    return path.startsWith("/api/")
+      ? json({ error: "upstream_error" }, 502)
+      : page(502, "Something went wrong", "GitHub didn't answer as expected. Try again in a minute.");
+  }
+
+  return env.ASSETS.fetch(request);
+}
+
+// Tell browsers to skip http entirely from now on (6 months). Only sent over
+// https; browsers ignore it on http anyway.
+const HSTS = "max-age=15552000; includeSubDomains";
+
 export default {
   async fetch(request, env, ctx) {
-    const url = new URL(request.url);
-    // One address for everyone: sessions and the GitHub callback live there.
-    // Plain http would also break sign-in: GitHub only knows the https
-    // callback, and the __Host- cookies need a secure page.
-    const wrongHost = env.CANONICAL_HOST && url.hostname !== env.CANONICAL_HOST && url.hostname.endsWith(".workers.dev");
-    const local = url.hostname === "localhost" || url.hostname === "127.0.0.1";
-    if (wrongHost || (url.protocol === "http:" && !local)) {
-      if (wrongHost) url.hostname = env.CANONICAL_HOST;
-      url.protocol = "https:";
-      return Response.redirect(url.href, 301);
-    }
-    const path = url.pathname;
-    const user = await unseal(env, readCookie(request, SESSION));
-
-    try {
-      if (path.startsWith("/auth/") && !appConfigured(env)) {
-        return page(503, "Not set up yet", "Sign-in isn't configured on this portal yet.");
-      }
-      if (path === "/auth/login") return await login(env, url);
-      if (path === "/auth/callback") return await callback(request, env, url);
-      if (path === "/auth/logout") {
-        if (request.method !== "POST") return new Response("Use POST", { status: 405 });
-        return json({ ok: true }, 200, { "Set-Cookie": cookie(SESSION, "", 0) });
-      }
-      if (path === "/api/session") {
-        return json({ user: user ? { login: user.login, avatar: user.avatar } : null });
-      }
-      if (path === "/api/apps") {
-        if (!appConfigured(env)) return json({ apps: [], warning: "GitHub App not configured" });
-        return json({ apps: await visibleApps(env, user?.login) });
-      }
-      if (path === "/apps" || path.startsWith("/apps/")) {
-        if (!appConfigured(env)) return page(503, "Not set up yet", "Private apps are not configured.");
-        return await privateApp(request, env, ctx, url, user);
-      }
-    } catch (e) {
-      console.error(e);
-      return path.startsWith("/api/")
-        ? json({ error: "upstream_error" }, 502)
-        : page(502, "Something went wrong", "GitHub didn't answer as expected. Try again in a minute.");
-    }
-
-    return env.ASSETS.fetch(request);
+    const res = await handle(request, env, ctx);
+    if (new URL(request.url).protocol !== "https:") return res;
+    const out = new Response(res.body, res);
+    out.headers.set("Strict-Transport-Security", HSTS);
+    return out;
   },
 };
