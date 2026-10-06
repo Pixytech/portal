@@ -1,0 +1,25 @@
+name = "pixytech-portal"
+main = "src/index.js"
+compatibility_date = "2026-09-01"
+
+# The portal page itself. The worker runs first so /auth, /api and /apps are
+# handled here; everything else falls through to these files.
+[assets]
+directory = "../site"
+binding = "ASSETS"
+run_worker_first = true
+
+[vars]
+OWNER = "Pixytech"
+# Repos with this topic and a portal.json become tiles.
+APP_TOPIC = "portal-app"
+# Members of this org team can use every private app. Each app also has its
+# own team: app-<slug>, or the "teams" listed in its portal.json.
+ADMIN_TEAM = "portal-admins"
+# From the GitHub App's settings page.
+GITHUB_APP_ID = "REPLACE_WITH_APP_ID"
+GITHUB_CLIENT_ID = "REPLACE_WITH_APP_CLIENT_ID"
+
+# Secrets, set once:
+#   npx wrangler secret put GITHUB_CLIENT_SECRET
+#   npx wrangler secret put GITHUB_APP_PRIVATE_KEY < path/to/private-key.pem

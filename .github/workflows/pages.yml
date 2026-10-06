@@ -1,0 +1,33 @@
+# The portal now runs on Cloudflare (see worker/). GitHub Pages only serves a
+# redirect so old pixytech.github.io/portal/ links keep working.
+name: Redirect GitHub Pages to the portal
+
+on:
+  push:
+    branches: [main]
+    paths: [redirect/**, .github/workflows/pages.yml]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: redirect
+      - id: deployment
+        uses: actions/deploy-pages@v4

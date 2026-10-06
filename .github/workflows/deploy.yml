@@ -1,0 +1,33 @@
+# Deploys the portal (worker + site/) to Cloudflare on every push to main.
+# Needs repo secret CLOUDFLARE_API_TOKEN (template "Edit Cloudflare Workers")
+# and repo variable CLOUDFLARE_ACCOUNT_ID. Until they exist this job is
+# skipped and you deploy with `npx wrangler deploy` from worker/.
+name: Deploy portal to Cloudflare
+
+on:
+  push:
+    branches: [main]
+    paths: [site/**, worker/**, .github/workflows/deploy.yml]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        if: env.CLOUDFLARE_API_TOKEN != ''
+      - uses: cloudflare/wrangler-action@v3
+        if: env.CLOUDFLARE_API_TOKEN != ''
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: worker

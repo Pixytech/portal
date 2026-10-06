@@ -1,0 +1,4 @@
+site/apps.json
+node_modules/
+worker/.wrangler/
+.dev.vars
