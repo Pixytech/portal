@@ -1,11 +1,1 @@
-[
-  {
-    "slug": "github",
-    "title": "Portal repository",
-    "description": "Source, settings and collaborators for this portal.",
-    "icon": "⚙",
-    "color": "#24292f",
-    "order": 1000,
-    "url": "https://github.com/Pixytech/portal"
-  }
-]
+[]
