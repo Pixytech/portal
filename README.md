@@ -19,8 +19,8 @@ redirect/             what pixytech.github.io/portal/ serves: a redirect here
 
 ## How it works
 
-**Apps are repos.** Any repo the GitHub App is installed on that has the
-topic `portal-app` and a `portal.json` on its default branch becomes a tile:
+**Apps are repos.** Any repo the GitHub App is installed on that has a
+`portal.json` on its default branch becomes a tile:
 
 ```json
 {
@@ -63,8 +63,8 @@ read their login and then thrown away.
 
 ## Adding an app
 
-Public: add the `portal-app` topic and a `portal.json` with `"access":
-"public"` and its `url`. Add the repo to the GitHub App's installation.
+Public: add a `portal.json` with `"access": "public"` and its `url`, then
+add the repo to the GitHub App's installation.
 
 Private: same, with `"access": "private"`, plus a workflow that builds with
 base `/apps/<slug>/` and force-pushes the output to a `site` branch (see

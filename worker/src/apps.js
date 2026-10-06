@@ -1,7 +1,7 @@
 // App catalog, entitlements and the private-app file proxy.
 //
-// An app is any repo the GitHub App can see that has the APP_TOPIC topic and
-// a portal.json on its default branch. Public apps link to wherever they are
+// An app is any repo the GitHub App is installed on that has a portal.json
+// on its default branch; installing the app on a repo is the on switch. Public apps link to wherever they are
 // hosted. Private apps are served from a branch of their own repo (default
 // "site") at /apps/<slug>/, only to members of the app's org teams.
 
@@ -29,7 +29,7 @@ async function listRepos(env) {
 async function buildCatalog(env) {
   const owner = env.OWNER.toLowerCase();
   const repos = (await listRepos(env)).filter(
-    (r) => r.owner.login.toLowerCase() === owner && (r.topics || []).includes(env.APP_TOPIC) && !r.archived,
+    (r) => r.owner.login.toLowerCase() === owner && !r.archived,
   );
   const apps = await Promise.all(
     repos.map(async (repo) => {
