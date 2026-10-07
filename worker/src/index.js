@@ -19,6 +19,7 @@ import { getCatalog, canUse, visibleApps, serveFile } from "./apps.js";
 const SESSION = "__Host-portal-session";
 const OAUTH = "__Host-portal-oauth";
 const SESSION_HOURS = 8;
+const INSTALL_FILES = /^(manifest\.webmanifest|pwa-[a-z0-9-]+\.png|favicon\.png)$/;
 
 const json = (body, status = 200, extra = {}) =>
   new Response(JSON.stringify(body), {
@@ -91,6 +92,9 @@ async function privateApp(request, env, ctx, url, user) {
 
   const app = (await getCatalog(env)).find((a) => a.slug === slug && a.private);
   if (!app) return page(404, "Not found", "There is no app at this address.");
+  // The install manifest and its icons: browsers fetch the icons without cookies, and they give nothing away.
+  const file = rest.join("/");
+  if (INSTALL_FILES.test(file)) return serveFile(env, ctx, app, file);
   if (!user) {
     const wantsPage = (request.headers.get("Accept") || "").includes("text/html");
     if (!wantsPage) return new Response("Sign in required", { status: 401 });
